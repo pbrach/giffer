@@ -1,0 +1,14 @@
+{
+  "name": "giffer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "monorepo for giffer",
+  "scripts": {
+    "preinstall": "npx only-allow pnpm"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.2"
+  },
+  "author": "philipp",
+  "license": "ISC"
+}
