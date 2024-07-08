@@ -98,6 +98,7 @@ export class SuperGif {
       return;
     }
 
+    // TODO: remove XHR
     let request = new XMLHttpRequest();
     // New browsers (XMLHttpRequest2-compliant)
     request.open("GET", src, true);
