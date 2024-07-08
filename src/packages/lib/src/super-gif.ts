@@ -1,4 +1,4 @@
-import { SuperGifParser } from "./parser";
+import { GifHandler, SuperGifParser } from "./parser";
 import { SuperGifStream } from "./stream";
 
 export class SuperGif {
@@ -17,7 +17,7 @@ export class SuperGif {
   private disposalMethod = null;
   private disposalRestoreFromIdx = null;
   private lastDisposalMethod = null;
-  private frame = null;
+  private frame: CanvasRenderingContext2D = null;
   private lastImg = null;
 
   private playing = true;
@@ -25,8 +25,10 @@ export class SuperGif {
 
   private ctxScaled = false;
 
-  private frames: { delay: number; data: any }[] = [];
-  private frameOffsets = []; // Elements have .x and .y properties
+  private frames: { delay: number; data: ImageData }[] = [];
+
+  // TODO: possibly remov (not really used)
+  private frameOffsets: { x: number; y: number }[] = []; // Elements have .x and .y properties
 
   private onEndListener;
   private loopDelay;
@@ -43,7 +45,7 @@ export class SuperGif {
   private iterationCount = 0;
   private stepping = false;
 
-  private handler = {
+  private handler: GifHandler = {
     hdr: this.withProgress(this.doHdr.bind(this)),
     gce: this.withProgress(this.doGCE.bind(this)),
     com: this.withProgress(this.doNothing.bind(this)),
@@ -69,6 +71,13 @@ export class SuperGif {
     },
   };
 
+  // MAIN TODO 1:
+  // Input should be: a canvas and opts only
+  // SuperGif should then be paired with that canvas and operate on it
+  // Alternatively: if none is provided create one internally and the user
+  // requests it from SuperGif
+  //
+  // As a resoucre holder superGif probably needs to be 'dispose()'-able
   constructor(private gifImgElement: HTMLImageElement, opts: any) {
     for (let i in opts) {
       this.options[i] = opts[i];
@@ -79,6 +88,147 @@ export class SuperGif {
     this.overrideLoopMode = opts.loopMode != null ? opts.loopMode : "auto";
     this.drawWhileLoading =
       opts.drawWhileLoading != null ? opts.drawWhileLoading : true;
+  }
+
+  // MAIN TODO 2: only a single method (remove loadURL() and load())
+  // should be: 'load(gifFile: File): Promise<void>'
+  // then run your callback on await
+  loadURL(src: string, callback) {
+    if (!this.loadSetup(callback)) {
+      return;
+    }
+
+    let request = new XMLHttpRequest();
+    // New browsers (XMLHttpRequest2-compliant)
+    request.open("GET", src, true);
+
+    if ("overrideMimeType" in request) {
+      request.overrideMimeType("text/plain; charset=x-user-defined");
+    } else if ("responseType" in request) {
+      // old browsers (XMLHttpRequest-compliant)
+      // @ts-ignore
+      request.responseType = "arraybuffer";
+    } else {
+      // IE9 (Microsoft.XMLHTTP-compliant)
+      // @ts-ignore
+      request.setRequestHeader("Accept-Charset", "x-user-defined");
+    }
+
+    request.onloadstart = () => {
+      // Wait until connection is opened to replace the gif element with a canvas to avoid a blank img
+      if (!this.initialized) {
+        this.init();
+      }
+    };
+
+    request.onload = () => {
+      if (request.status !== 200) {
+        this.handleError("xhr - response");
+        return;
+      }
+
+      let data = request.response;
+      if (data.toString().indexOf("ArrayBuffer") > 0) {
+        data = new Uint8Array(data);
+      }
+
+      const stream = new SuperGifStream(data);
+      setTimeout(() => {
+        this.parseStream(stream);
+      }, 0);
+    };
+
+    request.onerror = () => {
+      this.handleError("xhr");
+    };
+
+    request.send();
+  }
+
+  load(callback): void {
+    this.loadURL(this.gifImgElement.src, callback);
+  }
+
+  /**
+   * Gets the index of the frame "up next".
+   * @returns {number}
+   */
+  getNextFrameNo() {
+    let delta = this.forward ? 1 : -1;
+    return (
+      (this.currentFrameIndex + delta + this.frames.length) % this.frames.length
+    );
+  }
+
+  stepFrame(amount) {
+    // XXX: Name is confusing.
+    this.currentFrameIndex = this.currentFrameIndex + amount;
+    this.putFrame();
+  }
+
+  getCanvasScale() {
+    let scale: number;
+
+    if (
+      this.options.maxWidth &&
+      this.hdr &&
+      this.hdr.width > this.options.maxWidth
+    ) {
+      scale = this.options.maxWidth / this.hdr.width;
+    } else {
+      scale = window.devicePixelRatio || 1;
+    }
+
+    return scale;
+  }
+
+  // MAIN TODO 3:
+  // Provide usable functions:
+  // stepToFrame(frameNumber: number), stepForward(numFrames: number=1), stepBackward(numFrames:number=1), jumpStart(), jumpEnd()
+  // play(), pause(), stop()
+  // directly applied:
+  // setLooping(shouldLoop: boolean), setSpeed(speed:number)
+  //
+  play() {
+    this.playing = true;
+    this.step();
+  }
+
+  pause() {
+    this.playing = false;
+  }
+
+  isPlaying() {
+    return this.playing;
+  }
+
+  getCanvas() {
+    return this.canvas;
+  }
+
+  isLoading() {
+    return this.loading;
+  }
+
+  isReady() {
+    return this.ready;
+  }
+
+  isAutoPlay() {
+    return this.options.autoPlay;
+  }
+
+  getLength() {
+    return this.frames.length;
+  }
+
+  getCurrentFrame() {
+    return this.currentFrameIndex;
+  }
+
+  moveTo(idx) {
+    this.currentFrameIndex = idx;
+    this.putFrame();
   }
 
   private init() {
@@ -372,136 +522,5 @@ export class SuperGif {
     return function (block) {
       fn(block);
     };
-  }
-
-  /**
-   * Gets the index of the frame "up next".
-   * @returns {number}
-   */
-  getNextFrameNo() {
-    let delta = this.forward ? 1 : -1;
-    return (
-      (this.currentFrameIndex + delta + this.frames.length) % this.frames.length
-    );
-  }
-
-  stepFrame(amount) {
-    // XXX: Name is confusing.
-    this.currentFrameIndex = this.currentFrameIndex + amount;
-    this.putFrame();
-  }
-
-  getCanvasScale() {
-    let scale: number;
-
-    if (
-      this.options.maxWidth &&
-      this.hdr &&
-      this.hdr.width > this.options.maxWidth
-    ) {
-      scale = this.options.maxWidth / this.hdr.width;
-    } else {
-      scale = window.devicePixelRatio || 1;
-    }
-
-    return scale;
-  }
-
-  play() {
-    this.playing = true;
-    this.step();
-  }
-
-  pause() {
-    this.playing = false;
-  }
-
-  isPlaying() {
-    return this.playing;
-  }
-
-  getCanvas() {
-    return this.canvas;
-  }
-
-  isLoading() {
-    return this.loading;
-  }
-
-  isReady() {
-    return this.ready;
-  }
-
-  isAutoPlay() {
-    return this.options.autoPlay;
-  }
-
-  getLength() {
-    return this.frames.length;
-  }
-
-  getCurrentFrame() {
-    return this.currentFrameIndex;
-  }
-
-  moveTo(idx) {
-    this.currentFrameIndex = idx;
-    this.putFrame();
-  }
-
-  loadURL(src: string, callback) {
-    if (!this.loadSetup(callback)) {
-      return;
-    }
-
-    let request = new XMLHttpRequest();
-    // New browsers (XMLHttpRequest2-compliant)
-    request.open("GET", src, true);
-
-    if ("overrideMimeType" in request) {
-      request.overrideMimeType("text/plain; charset=x-user-defined");
-    } else if ("responseType" in request) {
-      // old browsers (XMLHttpRequest-compliant)
-      // @ts-ignore
-      request.responseType = "arraybuffer";
-    } else {
-      // IE9 (Microsoft.XMLHTTP-compliant)
-      // @ts-ignore
-      request.setRequestHeader("Accept-Charset", "x-user-defined");
-    }
-
-    request.onloadstart = () => {
-      // Wait until connection is opened to replace the gif element with a canvas to avoid a blank img
-      if (!this.initialized) {
-        this.init();
-      }
-    };
-
-    request.onload = () => {
-      if (request.status !== 200) {
-        this.handleError("xhr - response");
-        return;
-      }
-
-      let data = request.response;
-      if (data.toString().indexOf("ArrayBuffer") > 0) {
-        data = new Uint8Array(data);
-      }
-
-      const stream = new SuperGifStream(data);
-      setTimeout(() => {
-        this.parseStream(stream);
-      }, 0);
-    };
-
-    request.onerror = () => {
-      this.handleError("xhr");
-    };
-
-    request.send();
-  }
-
-  load(callback): void {
-    this.loadURL(this.gifImgElement.src, callback);
   }
 }

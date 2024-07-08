@@ -1,9 +1,27 @@
 import { SuperGifUtils } from "./utils";
 import { SuperGifStream } from "./stream";
 
+export type BlockType = "ext" | "img" | "eof";
+export type Block = { sentinel: number; type: BlockType };
+export type HandlerFunc = (block: any) => void;
+export type GifHandler = {
+  hdr: HandlerFunc;
+  gce: HandlerFunc;
+  com: HandlerFunc;
+  app: { NETSCAPE: HandlerFunc };
+  img: HandlerFunc;
+  eof: HandlerFunc;
+  pte?: any; // TODO, unused?
+  unknown?: any; // TODO, unused?
+};
 // The actual parsing; returns an object with properties.
 export class SuperGifParser {
-  constructor(private stream: SuperGifStream, private handler) {}
+  private handler: GifHandler = null;
+  private stream: SuperGifStream = null;
+  constructor(stream: SuperGifStream, handler: GifHandler) {
+    this.stream = stream;
+    this.handler = handler;
+  }
 
   // LZW (GIF-specific)
   private parseCT(entries) {
