@@ -1,0 +1,11 @@
+{
+  "name": "@giffer/lib",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "preinstall": "npx only-allow pnpm"
+  },
+  "author": "philipp",
+  "license": "ISC",
+  "description": ""
+}

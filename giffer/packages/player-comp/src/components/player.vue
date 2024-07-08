@@ -153,7 +153,7 @@ function onButtonStepForward() {
 }
 
 const debouncedOnSliderMoved = throttle(onSliderMoved, 10);
-function onSliderMoved(_ev: InputEvent) {
+function onSliderMoved(_ev: Event) {
   gifHandle.moveTo(selectedFrame.value);
 }
 
