@@ -38,9 +38,9 @@ importers:
 
   packages/player-comp:
     dependencies:
-      '@wizpanda/super-gif':
-        specifier: ^0.0.6
-        version: 0.0.6
+      '@giffer/lib':
+        specifier: workspace:^
+        version: link:../lib
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
@@ -432,9 +432,6 @@ packages:
 
   '@vue/shared@3.4.31':
     resolution: {integrity: sha512-Yp3wtJk//8cO4NItOPpi3QkLExAr/aLBGZMmTtW9WpdwBCJpRM6zj9WgWktXAl8IDIozwNMByT45JP3tO3ACWA==}
-
-  '@wizpanda/super-gif@0.0.6':
-    resolution: {integrity: sha512-Ss8LhVDOi9E841wWuWO+Y9rO/eRT8QQMf1rqgeMth30lVeVzQGbiPPqJ3copM0fhmE3f3bncDJplYqToCiS6+g==}
 
   ajv@6.12.6:
     resolution: {integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==}
@@ -1079,8 +1076,6 @@ snapshots:
       vue: 3.4.31(typescript@5.5.3)
 
   '@vue/shared@3.4.31': {}
-
-  '@wizpanda/super-gif@0.0.6': {}
 
   ajv@6.12.6:
     dependencies:

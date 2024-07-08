@@ -15,7 +15,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@wizpanda/super-gif": "^0.0.6",
+    "@giffer/lib": "workspace:^",
     "lodash": "^4.17.21",
     "vue": "^3.4.29"
   },

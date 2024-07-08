@@ -42,8 +42,7 @@
 
 <script setup lang="ts">
 import { reactive, ref, watch } from "vue";
-import { SuperGif } from "@wizpanda/super-gif";
-import { SuperGifStream } from "@wizpanda/super-gif/dist/stream";
+import { SuperGif, SuperGifStream } from "@giffer/lib";
 import throttle from "lodash/throttle";
 
 const ref_display = ref<HTMLDivElement>(null);
