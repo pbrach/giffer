@@ -601,6 +601,11 @@
   dependencies:
     "@types/node" "*"
 
+"@types/lodash@^4.17.0":
+  version "4.17.0"
+  resolved "https://registry.npmjs.org/@types/lodash/-/lodash-4.17.0.tgz"
+  integrity sha512-t7dhREVv6dbNj0q17X12j7yDG4bD/DHYX7o5/DbDxobP0HnGPgpRz2Ej77aL7TZT3DSw13fqUTj8J4mMnqa7WA==
+
 "@types/node@*", "@types/node@^18.0.0 || >=20.0.0", "@types/node@^20.9.0":
   version "20.12.7"
   resolved "https://registry.npmjs.org/@types/node/-/node-20.12.7.tgz"
@@ -799,6 +804,11 @@
   version "3.4.23"
   resolved "https://registry.npmjs.org/@vue/shared/-/shared-3.4.23.tgz"
   integrity sha512-wBQ0gvf+SMwsCQOyusNw/GoXPV47WGd1xB5A1Pgzy0sQ3Bi5r5xm3n+92y3gCnB3MWqnRDdvfkRGxhKtbBRNgg==
+
+"@wizpanda/super-gif@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.npmjs.org/@wizpanda/super-gif/-/super-gif-0.0.6.tgz"
+  integrity sha512-Ss8LhVDOi9E841wWuWO+Y9rO/eRT8QQMf1rqgeMth30lVeVzQGbiPPqJ3copM0fhmE3f3bncDJplYqToCiS6+g==
 
 "@xmldom/xmldom@^0.8.8":
   version "0.8.10"
@@ -2960,7 +2970,7 @@ lodash.templatesettings@^4.0.0:
   dependencies:
     lodash._reinterpolate "^3.0.0"
 
-lodash@^4.17.20:
+lodash@^4.17.20, lodash@^4.17.21:
   version "4.17.21"
   resolved "https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
